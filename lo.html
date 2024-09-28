@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Authentication</title>
+  <link rel="stylesheet" href="lo.css"> </head>
+<body>
+  <div class="auth-container">
+    <div class="auth-form" id="login-form">
+      <h2>Login</h2>
+      <form>
+        <input type="email" placeholder="Email" id="login-email" required>
+        <input type="password" placeholder="Password" id="login-password" required>
+        <button type="submit">Login</button>
+      </form>
+      <p>Don't have an account? <a href="#" id="switch-to-signup">Sign up</a></p>
+    </div>
+
+    <div class="auth-form hidden" id="signup-form">
+      <h2>Sign Up </h2> <form>
+        <input type="text" placeholder="Username" id="signup-username" required> 
+        <input type="email" placeholder="Email" id="signup-email" required> 
+        <input type="password" placeholder="Password" id="signup-password" required>
+         <button type="submit">Sign Up</button> </form>
+      <p>Already have an account? <a href="#" id="switch-to-login">Login</a></p>
+    </div>
+  </div>
+
+  <script src="lo.js"></script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="sidebar">
+          <div>
+            <form class="search" id="search">
+              <input type="text" id="query" placeholder="Search..." />
+              <button><i class="fas fa-search thisclass"></i></button>
+            </form>
+
+            <div class="weather-icon">
+              <img id="icon" src="icons/sun/4.png" alt="" />
+            </div>
+            <div class="temperature">
+              <h1 id="temp">0</h1>
+              <span class="temp-unit">°C</span>
+              </div>
+            <div class="date-time">
+              <p id="date-time">Monday, 12:00</p>
+            </div>
+            <div class="divider"></div>
+            <div class="condition-rain">
+              <div class="condition">
+                <i class="fas fa-cloud"></i>
+                <p id="condition">condition</p>
+              </div>
+              <div class="rain">
+                <i class="fas fa-tint"></i>
+                <p id="rain">perc - 0%</p>
+              </div>
+            </div>
+          </div>
+          <div class="location">
+            <div class="location-icon">
+              <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="location-text">
+              <p id="location">location</p>
+            </div>
+          </div>
+        </div>
+
+
+
+        <div class="main">
+          <nav>
+            <ul class="options">
+              <button class="hourly">today</button>
+              <button class="week active">week</button>
+              <button id="executeAndDisplayButton">Get Customized plan to you email</button>
+            </ul>
+            <ul class="options units">
+              <button class="celcius active">°C</button>
+              <button class="fahrenheit">°F</button>
+            </ul>
+            <ul class="options user-options">
+              <li><button class='signout'><u>Sign Out</u></button></li>
+            </ul>
+          </nav>
+          <div class="cards" id="weather-cards"></div>
+          <div class="highlights">
+            <h2 class="heading">today's highlights</h2>
+            <div class="cards">
+              <div class="card2">
+                <h4 class="card-heading">UV Index</h4>
+                <div class="content">
+                  <p class="uv-index">0</p>
+                  <p class="uv-text">Low</p>
+                </div>
+              </div>
+              <div class="card2">
+                <h4 class="card-heading">Wind Status</h4>
+                <div class="content">
+                  <p class="wind-speed">0</p>
+                  <p>km/h</p>
+                </div>
+              </div>
+              <div class="card2">
+                <h4 class="card-heading">Sunrise & Sunset</h4>
+                <div class="content">
+                  <p class="sun-rise">0</p>
+                  <p class="sun-set">0</p>
+                </div>
+              </div>
+              <div class="card2">
+                <h4 class="card-heading">Humidity</h4>
+                <div class="content">
+                  <p class="humidity">0</p>
+                  <p class="humidity-status">Normal</p>
+                </div>
+              </div>
+              <div class="card2">
+                <h4 class="card-heading">Pressure</h4>
+                <div class="content">
+                  <p class="pressure-value">0</p>
+                  <p class="pressure-status">Normal</p>
+                </div>
+              </div>
+              <div class="card2">
+                <h4 class="card-heading">Air Quality</h4>
+                <div class="content">
+                  <p class="air-quality">0</p>
+                  <p class="air-quality-status">Normal</p>
+                </div>
+              </div>
+            </div>
+          </div>
+         
+        </div>
+
+      </div>
+
+    <script src="app.js"></script>
+    <script>
+      document.getElementById('executeAndDisplayButton').addEventListener('click', () => {
+        const sqlQuery = `
+        INSERT INTO tasks (date_, time_, task)
+  SELECT
+    CONCAT(SUBSTRING_INDEX(date_, '/', -1), '-', SUBSTRING_INDEX(SUBSTRING_INDEX(date_, '/', 1), '/', -1), '-', SUBSTRING_INDEX(date_, '/', 1)) AS date_,
+    CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) AS time_, -- Extracting time part and cleaning extra characters
+    CASE
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) < '06:00:00' THEN 'Sleep'
+      -- Morning Routine (Consider wind and temperature)
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '06:00:00' THEN 'Wake up, get ready'
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '07:00:00' THEN
+        CASE
+          WHEN temperature_celsius <= 10 THEN 'Indoor activities: Exercise or yoga (consider high wind?)'
+          WHEN temperature_celsius BETWEEN 11 AND 18 AND wind_speed_kmh <= 20 THEN 'Morning walk or jog'
+          WHEN temperature_celsius BETWEEN 11 AND 18 AND wind_speed_kmh > 20 THEN 'Indoor activities: Exercise or yoga (consider high wind)'
+          WHEN temperature_celsius >= 19 AND (precipitation_hours > 0 OR humidity >= 75) THEN 'Indoor activities: Consider comfort for high humidity/rain'
+          ELSE 'Outdoor activities like gardening or errands'
+        END
+      -- Daytime Schedule (Consider temperature, precipitation, and humidity)
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '08:00:00' THEN
+        CASE
+          WHEN temperature_celsius >= 28 THEN 'Stay indoors or in shaded areas'
+          WHEN (temperature_celsius BETWEEN 23 AND 27) AND (precipitation_hours > 0 OR humidity >= 80) THEN 'Indoor activities: Consider comfort for high humidity/rain'
+          WHEN (temperature_celsius BETWEEN 23 AND 27) AND wind_speed_kmh > 30 THEN 'Consider rescheduling outdoor activities due to high wind'
+          ELSE 'Outdoor activities like picnic or sports (consider wind if necessary)'
+        END
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) BETWEEN '09:00:00' AND '11:00:00' THEN 'Morning chores or work'
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '12:00:00' THEN 'Lunch'
+      -- Afternoon Schedule (Consider temperature, precipitation, and humidity)
+      
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '13:00:00' THEN
+        CASE
+          WHEN temperature_celsius >= 28 THEN 'Stay indoors or in shaded areas'
+          WHEN (temperature_celsius BETWEEN 23 AND 27) AND (precipitation_hours > 0 OR humidity >= 80) THEN 'Indoor activities: Consider comfort for high humidity/rain'
+          ELSE 'Afternoon work or study (consider outdoor activity if comfortable)'
+        END
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) BETWEEN '14:00:00' AND '16:00:00' THEN
+        CASE
+          WHEN temperature_celsius >= 28 THEN 'Stay indoors or in shaded areas'
+          WHEN (temperature_celsius BETWEEN 23 AND 27) AND (precipitation_hours > 0 OR humidity >= 80) THEN 'Indoor activities: Consider comfort for high humidity/rain'
+          ELSE 'Outdoor activity or errands (consider wind if necessary)'
+        END
+      -- Evening Schedule
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '17:00:00' THEN 'Evening leisure or entertainment'
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '18:00:00' THEN 'Netflix and chill'
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '19:00:00' THEN 'Dinner preperation'
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '20:00:00' THEN 'Dinner'
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '21:00:00' THEN 'Prepare for bed'
+      WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) >= '22:00:00' THEN 'Sleep'
+    END AS task
+  FROM
+    akshay_data8;
+  
+        `;
+  
+        fetch('http://localhost:3002/execute-sql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ sqlQuery })
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Response:', data);
+          displayTasks(); // After executing SQL, display tasks
+  
+          // Send email after executing SQL and displaying tasks
+          fetch('http://localhost:3002/send-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log('Email response:', data);
+          })
+          .catch(error => console.error('Error sending email:', error));
+        })
+        .catch(error => console.error('Error:', error));
+      });
+  
+      function displayTasks() {
+        fetch('http://localhost:3000/tasks')
+        .then(response => response.json())
+        .then(data => {
+          const tasksList = document.getElementById('tasksList');
+          tasksList.innerHTML = ''; // Clear previous content
+  
+          const ul = document.createElement('ul');
+          data.forEach(task => {
+            const li = document.createElement('li');
+            li.textContent = `${task.date_} ${task.time_}: ${task.task}`;
+            ul.appendChild(li);
+          });
+          tasksList.appendChild(ul);
+        })
+        .catch(error => console.error('Error fetching tasks:', error));
+      }
+    </script>
+
+    <!--<script src="auth.js"></script>-->
+
+</body>
+</html>

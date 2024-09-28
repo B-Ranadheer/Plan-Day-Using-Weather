@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Execute SQL and Display Tasks</title>
+</head>
+<body>
+  <button id="executeAndDisplayButton">Execute SQL and Display Tasks</button>
+  <div id="tasksList"></div>
+
+  <script>
+    document.getElementById('executeAndDisplayButton').addEventListener('click', () => {
+      const sqlQuery = `
+      INSERT INTO tasks (date_, time_, task)
+SELECT
+  CONCAT(SUBSTRING_INDEX(date_, '/', -1), '-', SUBSTRING_INDEX(SUBSTRING_INDEX(date_, '/', 1), '/', -1), '-', SUBSTRING_INDEX(date_, '/', 1)) AS date_,
+  CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) AS time_, -- Extracting time part and cleaning extra characters
+  CASE
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) < '06:00:00' THEN 'Sleep'
+    -- Morning Routine (Consider wind and temperature)
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '06:00:00' THEN 'Wake up, get ready'
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '07:00:00' THEN
+      CASE
+        WHEN temperature_celsius <= 10 THEN 'Indoor activities: Exercise or yoga (consider high wind?)'
+        WHEN temperature_celsius BETWEEN 11 AND 18 AND wind_speed_kmh <= 20 THEN 'Morning walk or jog'
+        WHEN temperature_celsius BETWEEN 11 AND 18 AND wind_speed_kmh > 20 THEN 'Indoor activities: Exercise or yoga (consider high wind)'
+        WHEN temperature_celsius >= 19 AND (precipitation_hours > 0 OR humidity >= 75) THEN 'Indoor activities: Consider comfort for high humidity/rain'
+        ELSE 'Outdoor activities like gardening or errands'
+      END
+    -- Daytime Schedule (Consider temperature, precipitation, and humidity)
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '08:00:00' THEN
+      CASE
+        WHEN temperature_celsius >= 28 THEN 'Stay indoors or in shaded areas'
+        WHEN (temperature_celsius BETWEEN 23 AND 27) AND (precipitation_hours > 0 OR humidity >= 80) THEN 'Indoor activities: Consider comfort for high humidity/rain'
+        WHEN (temperature_celsius BETWEEN 23 AND 27) AND wind_speed_kmh > 30 THEN 'Consider rescheduling outdoor activities due to high wind'
+        ELSE 'Outdoor activities like picnic or sports (consider wind if necessary)'
+      END
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) BETWEEN '09:00:00' AND '11:00:00' THEN 'Morning chores or work'
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '12:00:00' THEN 'Lunch'
+    -- Afternoon Schedule (Consider temperature, precipitation, and humidity)
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '13:00:00' THEN
+      CASE
+        WHEN temperature_celsius >= 28 THEN 'Stay indoors or in shaded areas'
+        WHEN (temperature_celsius BETWEEN 23 AND 27) AND (precipitation_hours > 0 OR humidity >= 80) THEN 'Indoor activities: Consider comfort for high humidity/rain'
+        ELSE 'Afternoon work or study (consider outdoor activity if comfortable)'
+      END
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) BETWEEN '14:00:00' AND '16:00:00' THEN
+      CASE
+        WHEN temperature_celsius >= 28 THEN 'Stay indoors or in shaded areas'
+        WHEN (temperature_celsius BETWEEN 23 AND 27) AND (precipitation_hours > 0 OR humidity >= 80) THEN 'Indoor activities: Consider comfort for high humidity/rain'
+        ELSE 'Outdoor activity or errands (consider wind if necessary)'
+      END
+    -- Evening Schedule
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '17:00:00' THEN 'Dinner preparation'
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '18:00:00' THEN 'Dinner'
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '19:00:00' THEN 'Evening leisure or entertainment'
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '20:00:00' THEN 'Wind down or prepare for bed'
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) = '21:00:00' THEN 'Prepare for bed'
+    WHEN CAST(SUBSTRING_INDEX(time_, '"', 1) AS TIME) >= '22:00:00' THEN 'Sleep'
+  END AS task
+FROM
+  akshay_data8;
+
+      `;
+
+      fetch('http://localhost:3002/execute-sql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sqlQuery })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Response:', data);
+        displayTasks(); // After executing SQL, display tasks
+      })
+      .catch(error => console.error('Error:', error));
+    });
+
+    function displayTasks() {
+      fetch('http://localhost:3000/tasks')
+      .then(response => response.json())
+      .then(data => {
+        const tasksList = document.getElementById('tasksList');
+        tasksList.innerHTML = ''; // Clear previous content
+
+        const ul = document.createElement('ul');
+        data.forEach(task => {
+          const li = document.createElement('li');
+          li.textContent = `${task.date_} ${task.time_}: ${task.task}`;
+          ul.appendChild(li);
+        });
+        tasksList.appendChild(ul);
+      })
+      .catch(error => console.error('Error fetching tasks:', error));
+    }
+  </script>
+</body>
+</html>
